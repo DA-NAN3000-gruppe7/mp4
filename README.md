@@ -22,6 +22,8 @@ Hvis dere møter på problemer med "same origin policy", kan lønne seg å ta en
 
 I denne oppgaven skal en Javascript klient bli skrevet som har så og si samme funksjonalitet som CGI-webgrensensittet fra MP3. Det vil si at den skal gjøre samme API-forespørsler ved utfylling og trykk av knapper.
 
+Det er blitt personlig valgt å bruke moderne syntaks til Javascript klienten så deklarasjonstypene*let* og *const* er brukt istedet for *var*, og pilfunksjoner blir brukt istedetfor *function()*.
+
 **Mer kommer....**
 
 
@@ -39,6 +41,8 @@ Start som vanlig og så gå til localhost/js-client/
 ## Log
 
 <pre>
+
+
 18-04-2021
 	MAGNUS: Har så langt lagt evenlisteners til alle knappene som gir riktig forespørsel til REST APIet og gjør da samme utskrift til status-feltet som CGI-webgrensensittet i MP3. I tillegg blir cookies satt slik at sesjoner blir lagret og at man da forblir logget inn selvom man lukker siden og åpner den igjen.
 
@@ -60,4 +64,7 @@ Start som vanlig og så gå til localhost/js-client/
 	En liten endring jeg har gjort som er veldig bruktbart er at jeg har endred *webserver.c* koden til å laste inn *index.html* dersom en katalog er spesifisert i URLen.
 
 	Det gjenstår da bare å få satt opp en service worker.
+
+	OPPDATERING:
+	Har fått lagt til service worker som funker greit fra det jeg har testa. Har også brukt mange timer på å finne ut hvorfor det ikke gikk ann å sende cookies. Kan hende det hadde noe med at cookien ble fornyet for hver gang jeg lastet inn siden på nytt, som viste seg å stamme fra at URLen som ble brukt for å sjekke loginstatus ikke var helt riktig. Den var *http://localhost/cgi-bin/rest.py/loginstatus* istedet for *http://localhost**:8000**/cgi-bin/rest.py/loginstatus*.
 </pre>

@@ -18,7 +18,7 @@ self.addEventListener("install", event => {
 });
 
 //activates the service worker
-self.addEventListener("activate", event => event.waitUntil(clients.claim()));
+self.addEventListener("activate", event => event.waitUntil(clients.claim())); //activated when initialized or when there is a claim(new data)
 
 //caches the requests
 self.addEventListener("fetch", event => {
@@ -33,5 +33,6 @@ self.addEventListener("fetch", event => {
       console.log("Network request for ", event.request.url);
       return fetch(event.request)
     })
+    .catch(error => console.log(error))
   );
 });

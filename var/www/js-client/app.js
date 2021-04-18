@@ -1,32 +1,29 @@
 "use strict"
 
+//selector for Debug text
 const statusField = document.querySelector(".status-field");
 
-const loginForm = document.querySelector("#login-form");
+
+//selector for the login form
 const loginDiv = document.querySelector("#login-div");
 
-const postPoem = document.querySelector("#post-poem");
-
+//selectors for non-dynamic forms
 const getPoem = document.querySelector("#get-poem");
-
 const getAll = document.querySelector("#get-all-poems");
 
-
+//default text to be outputted in the debug text field
 const DEFAULT_DEBUG_TEXT = "Debug: --- Start --- <br>";
 
-let loginstatus="0";
-let current_user;
 
-let cookie_string;
-let cookie = document.cookie;
+//used to verify session
 let current_cookie_id_value = "";
 
 
-if(cookie != "") 
-    current_cookie_id_value = cookie.split('=')[1];
+if(document.cookie != "") 
+    current_cookie_id_value = document.cookie.split('=')[1];
 
 
-//service worker
+//registering service worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register("sw.js")
     .then(registration => console.log(registration))
@@ -36,46 +33,36 @@ if ('serviceWorker' in navigator) {
 
 //check if user is already logged in
 if(current_cookie_id_value != "") {
+
     const url = "http://localhost:8000/cgi-bin/rest.py/loginstatus";
-    const data_check = `<check><sessionid>${current_cookie_id_value}</sessionid></check>`;
+    const post_data = `<check><sessionid>${current_cookie_id_value}</sessionid></check>`;
+
     fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/xml",
             "Accept": "application/xml"
         },
-        body: data_check
+        body: post_data
     })
     .then(response => response.text())
     .catch(error => alert(error))
     .then(data => {
-        
 
         statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Loginstatus xml: ${data}`;
-        window.scrollTo(0, 0);
 
         const xmlData = new DOMParser().parseFromString(data,"text/xml");
         const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
         const USER = xmlData.getElementsByTagName("user")[0].childNodes[0].nodeValue;
-        console.log(STATUSCODE, USER);
-        loginstatus = STATUSCODE;
-        current_user = USER;
+
         statusField.innerHTML += `<br/>Loginstatuscode: "${STATUSCODE}" - User: "${USER}`;
 
         setLoginEnv(USER);
-
-
-
-
     });
 }
 
 
-
-//this one will be assigned once a login has been made
-
-
-//login and logout -- These must be under an event target listener because they are dynamic elements in the DOM
+//login, logout, post, put, delete and delete all-- These must be under an event target listener because they are dynamic elements in the DOM
 document.addEventListener("click", event => {
     event.preventDefault();
 
@@ -83,73 +70,84 @@ document.addEventListener("click", event => {
     if (event.target && event.target.id == "login") {
 
         const url = "http://localhost:8000/cgi-bin/rest.py/login";
+
+        const loginForm = document.querySelector("#login-form");
+
     
-        //const username = loginForm.elements.inp_user.value;
+        const username = loginForm.elements.inp_user.value;
+        //temporarily commented away while hashing is being implemented in rest.sh
         //let password = loginForm.elements.inp_password.value;
-        const username = "henrik@mixdesign.no";
-    
-    
-        statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Username: ${username}<br>`;
-    
-        const hashpassword = "c95eb7a16be87c2cfdb9e049b83a053a53453b18424eee39388eb5ba8d516dc7";
-    
-        //const post_data = `<user><username>${username}</username><password>${hashpassword}</password></user>`;
-        const post_data = "<user><username>henrik@mixdesign.no</username><password>c95eb7a16be87c2cfdb9e049b83a053a53453b18424eee39388eb5ba8d516dc7</password></user>";
-    
-            
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/xml",
-                "Accept": "application/xml"
-            },
-            body: `<user><username>${username}</username><password>${hashpassword}</password></user>`
-        })
-        .then(response => response.text())
-        .catch(error => alert(error))
-        .then(data => {
-    
-            const xmlData = new DOMParser().parseFromString(data,"text/xml");
-    
-            const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
-            const NEWSESSIONID = xmlData.getElementsByTagName("sessionid")[0].childNodes[0].nodeValue;
-    
-            console.log(STATUSCODE, NEWSESSIONID);
-            loginstatus = STATUSCODE;
-    
+        const password = "c95eb7a16be87c2cfdb9e049b83a053a53453b18424eee39388eb5ba8d516dc7";
+
+        //if missing username or password
+        if(username == "" || password == "")
+            statusField.innerHTML =`${DEFAULT_DEBUG_TEXT}Brukernavn eller passord mangler`;
+
+        //if valid input   
+        else {
+            //clear fields
+            loginForm.elements.inp_password.value = "";
+
+
+
         
-            if(STATUSCODE == "1") {
-                current_user = username;
-    
-                document.cookie = `user_session=${NEWSESSIONID}`;
+            const post_data = `<user><username>${username}</username><password>${password}</password></user>`;
+
+
+            statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Username: ${username}<br>`;
+
                 
-    
-                cookie_string = `Set-cookie:${document.cookie}`;
-    
-                statusField.innerHTML += `Logget inn vellykket:  ${data}`;
-            
-                setLoginEnv(username);
-            }
-            else {
-                statusField.innerHTML =`${DEFAULT_DEBUG_TEXT}Feil ved innlogging`;
-                document.cookie = "";
-                cookie_string = `Set-cookie:${document.cookie}`;        }
-    
-        });
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/xml",
+                    "Accept": "application/xml"
+                },
+                body: post_data
+            })
+            .then(response => response.text())
+            .catch(error => alert(error))
+            .then(data => {
+                
+                //parse the XML-response
+                const xmlData = new DOMParser().parseFromString(data,"text/xml");
+        
+                const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
+                const NEWSESSIONID = xmlData.getElementsByTagName("sessionid")[0].childNodes[0].nodeValue;
+        
+                //console.log(STATUSCODE, NEWSESSIONID);
+        
+                //if login succesful
+                if(STATUSCODE == "1") {    
+                    document.cookie = `user_session=${NEWSESSIONID}; SameSite=;`;
+        
+                    statusField.innerHTML += `Logget inn vellykket:  ${data}`;
+                
+                    setLoginEnv(username);
+                }
+                //if login failed
+                else {
+                    statusField.innerHTML =`${DEFAULT_DEBUG_TEXT}Feil ved innlogging`;
+                    document.cookie = "";      
+                }
+        
+            });
+        }
+        //this is used to simply get to the top of the page to view the debug text field
         window.scrollTo(0, 0);
 
     }
     /*---------------LOGOUT---------------*/
     else if(event.target && event.target.id == "logout") {
-        console.log("clicked");
 
+        //sets the cookie to expire immediately
         document.cookie = "user_session=0; expires=Wed, 14-Feb-2001 05:53:40 GMT;";
-        cookie_string = `Set-cookie:${document.cookie}`;
+        
+        //send to database to tell that the session should be terminated
+        const session_to_logout = current_cookie_id_value;
 
-        const session_to_logout=current_cookie_id_value
-
-        const url ="http://localhost:8000/cgi-bin/rest.py/logout"
-        const data = `<user><sessionid>"${session_to_logout}"</sessionid></user>`
+        const url = "http://localhost:8000/cgi-bin/rest.py/logout";
+        const data = `<user><sessionid>"${session_to_logout}"</sessionid></user>`;
 
         fetch(url, {
             method: "POST",
@@ -162,20 +160,21 @@ document.addEventListener("click", event => {
         .then(response => response.text())
         .catch(error => alert(error))
         .then(data => {
-            
+
+
+            //parse XML response
             const xmlData = new DOMParser().parseFromString(data,"text/xml");
             const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
-
+            
+            //if logout successful
             if(STATUSCODE == "1") {
-                loginstatus = "0";
                 statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Logget ut`;
                 document.cookie = "user_session=0; expires=Wed, 14-Feb-2001 05:53:40 GMT;";
-                cookie_string = `Set-cookie:${document.cookie}`;
-                console.log(document.cookie);
+
                 setLogoutEnv();
             }
 
-
+            //if logout failed
             else
                 statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Kunne ikke logge ut`
         });
@@ -185,10 +184,12 @@ document.addEventListener("click", event => {
 
     /*---------------POST---------------*/
     else if(event.target && event.target.id == "create") {
-        event.preventDefault();
+
+        //get poem to post
+        const postPoem = document.querySelector("#create-poem");
+        const poem = postPoem.elements.dikttekst.value;
 
 
-        const poem = document.querySelector("#create-poem").elements.dikttekst.value;
 
         if(poem == "")
             statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Diktfeltet er tomt!`;
@@ -197,6 +198,8 @@ document.addEventListener("click", event => {
             const url = "http://localhost:8000/cgi-bin/rest.py/diktsamling/dikt/"
     
             const data = `<dikt><text>${poem}</text></dikt>`;
+
+            const cookie_data = document.cookie;
     
             fetch(url, {
                 method: "POST",
@@ -204,31 +207,43 @@ document.addEventListener("click", event => {
                     "Content-Type": "application/xml",
                     "Accept": "application/xml"
                 },
-                credentials: 'include',
+                credentials: "include",
                 body: data
+
             })
             .then(response => response.text())
             .catch(error => alert(error))
             .then(data => statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}${data}`);
         }
+        //clear the text field
+        postPoem.elements.dikttekst.value = "";
         window.scrollTo(0, 0);
 
     }
 
     /*---------------PUT---------------*/
     else if(event.target && event.target.id == "update") {
-        
+
         const updateForm = document.querySelector("#update-poem");
 
+        //get poem to update
         const poemId = updateForm.elements.inp_diktid.value;
         const poem = updateForm.elements.inp_dikttekst.value;
 
-
+        //if poemID is empty
         if(poemId == "")
             statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}DiktId ikke angitt`;
+
+        //if poem text is empty
         else if(poem == "")
         statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Dikttekst ikke angitt`;
+
+        //if valid input
         else {
+            //clear text fields
+            updateForm.elements.inp_diktid.value = "";
+            updateForm.elements.inp_dikttekst.value = "";
+
             const url = `http://localhost:8000/cgi-bin/rest.py/diktsamling/dikt/${poemId}`;
             
             const data = `<dikt><text>${poem}</text></dikt>`;
@@ -253,11 +268,13 @@ document.addEventListener("click", event => {
     /*---------------DELETE---------------*/
     else if(event.target && event.target.id == "delete") {
 
+
+        //get poem to delete
         const poemId = document.querySelector("#delete-poem").elements.inp_diktid.value;
 
+        //if ID is specified
         if(poemId != "") {
             const url = `http://localhost:8000/cgi-bin/rest.py/diktsamling/dikt/${poemId}`;
-            const data = "";
 
             fetch(url, {
                 method: "DELETE",
@@ -265,14 +282,13 @@ document.addEventListener("click", event => {
                     "Content-Type": "application/xml",
                     "Accept": "application/xml"
                 },
-                credentials: "include",
-                body: data
+                credentials: "include"
             })
             .then(response => response.text())
             .catch(error => alert(error))
             .then(data => statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Slette ett dikt: ${data}`);
         }
-        
+        //if ID is empty
         else
             statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Diktid er ikke angitt - kan ikke slette dikt`;
         window.scrollTo(0, 0);
@@ -281,23 +297,21 @@ document.addEventListener("click", event => {
 
     /*---------------DELETE ALL---------------*/
     else if(event.target && event.target.id == "delete_all") {
-        console.log("Delete all");
-        
-        /*const url=`http://localhost:8000/cgi-bin/rest.py/diktsamling/dikt/`;
-        const data ="";
 
+
+        const url="http://localhost:8000/cgi-bin/rest.py/diktsamling/dikt/";
         fetch(url, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/xml",
                 "Accept": "application/xml"
             },
-            credentials: "include",
-            body: data
+            credentials: "include"
         })
         .then(response => response.text())
         .catch(error => alert(error))
-        .then(data => statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Slette alle dikt: ${data}`);*/
+        .then(data => statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Slette alle dikt: ${data}`);
+        
         window.scrollTo(0, 0);
 
     }
@@ -309,13 +323,15 @@ document.addEventListener("click", event => {
 getPoem.elements.read_poem.addEventListener("click", event => {
     event.preventDefault();
 
+    //get poem ID
     const poemId = getPoem.elements.diktid.value;
 
 
-    //if np poem ID is presented
+    //if no poem ID is presented
     if(poemId == "")
         statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} Diktid er ikke angitt - kan ikke hente dikt`;
 
+    //if valid input
     else {
         const url = `http://localhost:8000/cgi-bin/rest.py/diktsamling/dikt/${poemId}`;
 
@@ -425,7 +441,7 @@ const setLoginEnv = username => {
 
 }
 
-//sets the environment
+//sets logout environment
 const setLogoutEnv = () => {
     
     loginDiv.innerHTML = `<p>Du må logge inn</p>
