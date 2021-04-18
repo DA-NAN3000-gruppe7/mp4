@@ -26,6 +26,14 @@ if(cookie != "")
     current_cookie_id_value = cookie.split('=')[1];
 
 
+//service worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("sw.js")
+    .then(registration => console.log(registration))
+    .catch(error => alert(error)); 
+}
+
+
 //check if user is already logged in
 if(current_cookie_id_value != "") {
     const url = "http://localhost:8000/cgi-bin/rest.py/loginstatus";
@@ -113,7 +121,7 @@ document.addEventListener("click", event => {
             if(STATUSCODE == "1") {
                 current_user = username;
     
-                document.cookie = `user_session=${NEWSESSIONID}; SameSite=None; Secure`;
+                document.cookie = `user_session=${NEWSESSIONID}`;
                 
     
                 cookie_string = `Set-cookie:${document.cookie}`;

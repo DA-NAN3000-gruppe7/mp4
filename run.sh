@@ -1,5 +1,10 @@
 #!/bin/bash
- 
+
+#checking if root is running
+if [ "$EUID" -ne 0 ]
+  then echo "Server must be run as root. Use 'sudo ./run.sh' next time"
+  exit
+fi
 
 #assings path to current directory and to init.sh
 ROTFS=$PWD
@@ -23,6 +28,8 @@ fi
 
 ######coming soon
 
+#systemctl start docker.service
+
 #sudo docker login
 
 #sudo docker pull hkulterud/dockerhub:g7mp3_image
@@ -34,17 +41,17 @@ fi
 #compile the webserver.c code
 #adding a condition so that the server doesn't run if webserver.c failed compiling
 if gcc $ROTFS/bin/webserver.c --static -o $ROTFS/bin/webserver.o; then
-	sudo chown root:root $ROTFS/bin/webserver.o
-	sudo chmod u+s $ROTFS/bin/webserver.o
+	chown root:root $ROTFS/bin/webserver.o
+	chmod u+s $ROTFS/bin/webserver.o
 
 	cd $ROTFS
 
 	#mount /proc as proc in current directory
-	sudo mount -t proc proc $ROTFS/proc
+	mount -t proc proc $ROTFS/proc
 
 	#create new namespace and change root, executing init.sh
-	sudo PATH=/bin unshare -p -f --mount-proc=$ROTFS/proc /usr/sbin/chroot . /bin/init.sh
+	PATH=/bin unshare -p -f --mount-proc=$ROTFS/proc /usr/sbin/chroot . /bin/init.sh
 
 	#unmounting the namespace
-	sudo umount $ROTFS/proc
+	umount $ROTFS/proc
 fi
