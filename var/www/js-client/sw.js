@@ -18,21 +18,20 @@ self.addEventListener("install", event => {
 });
 
 //activates the service worker
-self.addEventListener("activate", event => event.waitUntil(clients.claim())); //activated when initialized or when there is a claim(new data)
+self.addEventListener("activate", event => event.waitUntil(clients.claim()));
 
-//caches the requests
-self.addEventListener("fetch", event => {
-  console.log("Fetch event for ", event.request.url);
+//caches files and responses
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-    .then(response => {
-      if (response) {
-        console.log("Found ", event.request.url, " in cache");
+    caches.match(event.request).then((resp) => {
+      return resp || fetch(event.request).then((response) => {
+        let responseClone = response.clone();
+        caches.open('gruppe7_app-cache').then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+
         return response;
-      }
-      console.log("Network request for ", event.request.url);
-      return fetch(event.request)
+      }).catch(error => console.log(error))
     })
-    .catch(error => console.log(error))
-  );
+  )
 });

@@ -1,5 +1,3 @@
-"use strict"
-
 //selector for Debug text
 const statusField = document.querySelector(".status-field");
 
@@ -23,7 +21,7 @@ if(document.cookie != "")
     current_cookie_id_value = document.cookie.split('=')[1];
 
 
-//registering service worker
+//service worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register("sw.js")
     .then(registration => console.log(registration))
@@ -40,7 +38,6 @@ if(current_cookie_id_value != "") {
     fetch(url, {
         method: "POST",
         headers: {
-            "Content-Type": "application/xml",
             "Accept": "application/xml"
         },
         body: post_data
@@ -51,11 +48,15 @@ if(current_cookie_id_value != "") {
 
         statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Loginstatus xml: ${data}`;
 
+        console.log(data);
+
         const xmlData = new DOMParser().parseFromString(data,"text/xml");
         const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
         const USER = xmlData.getElementsByTagName("user")[0].childNodes[0].nodeValue;
 
-        statusField.innerHTML += `<br/>Loginstatuscode: "${STATUSCODE}" - User: "${USER}`;
+        console.log(STATUSCODE, USER);
+
+        statusField.innerHTML += `<br/>Loginstatuscode: ${STATUSCODE} - User: ${USER}`;
 
         setLoginEnv(USER);
     });
@@ -88,9 +89,6 @@ document.addEventListener("click", event => {
             //clear fields
             loginForm.elements.inp_password.value = "";
 
-
-
-        
             const post_data = `<user><username>${username}</username><password>${password}</password></user>`;
 
 
@@ -100,7 +98,6 @@ document.addEventListener("click", event => {
             fetch(url, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/xml",
                     "Accept": "application/xml"
                 },
                 body: post_data
@@ -109,16 +106,21 @@ document.addEventListener("click", event => {
             .catch(error => alert(error))
             .then(data => {
                 
+
+                console.log(data);
+
                 //parse the XML-response
                 const xmlData = new DOMParser().parseFromString(data,"text/xml");
         
                 const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
-                const NEWSESSIONID = xmlData.getElementsByTagName("sessionid")[0].childNodes[0].nodeValue;
         
-                //console.log(STATUSCODE, NEWSESSIONID);
         
                 //if login succesful
-                if(STATUSCODE == "1") {    
+                if(STATUSCODE === "1") {
+                    loginForm.elements.inp_user.value = "";
+ 
+                    const NEWSESSIONID = xmlData.getElementsByTagName("sessionid")[0].childNodes[0].nodeValue;
+
                     document.cookie = `user_session=${NEWSESSIONID}; SameSite=;`;
         
                     statusField.innerHTML += `Logget inn vellykket:  ${data}`;
@@ -127,7 +129,7 @@ document.addEventListener("click", event => {
                 }
                 //if login failed
                 else {
-                    statusField.innerHTML =`${DEFAULT_DEBUG_TEXT}Feil ved innlogging`;
+                    statusField.innerHTML += "Feil ved innlogging";
                     document.cookie = "";      
                 }
         
@@ -152,7 +154,6 @@ document.addEventListener("click", event => {
         fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application/xml",
                 "Accept": "application/xml"
             },
             body: data
@@ -204,7 +205,6 @@ document.addEventListener("click", event => {
             fetch(url, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/xml",
                     "Accept": "application/xml"
                 },
                 credentials: "include",
