@@ -17,3 +17,12 @@
     <img src="img/html5.png" alt="html5">
   </body>
 </html>
+
+<script type="text/javascript">
+//service worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("/js-client/sw.js")
+    .then(registration => console.log(registration))
+    .catch(error => alert(error)); 
+}
+</script>

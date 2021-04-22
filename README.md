@@ -22,26 +22,50 @@ Hvis dere møter på problemer med "same origin policy", kan lønne seg å ta en
 
 I denne oppgaven skal en Javascript klient bli skrevet som har så og si samme funksjonalitet som CGI-webgrensensittet fra MP3. Det vil si at den skal gjøre samme API-forespørsler ved utfylling og trykk av knapper.
 
+HTML filen blir nesten identisk som HTML filen i MP3, men med unntaket av at i denne klienten er kun GET-metoder tillgjengelige hvis man ikke er logget inn. Javascript tillater å manipulere *DOM*-et(Document Object Module), altså det gjengitte grensensittet som tar utgangspunkt av den vedlagte HTML filen. Dette gjør at man kan legge til dynamiske elementer som senere kan bli fjernet.
+Disse miljøene er definert som *pålogget* og *avlogget*-miljø.
+
 Det er blitt personlig valgt å bruke moderne syntaks til Javascript klienten så deklarasjonstypene*let* og *const* er brukt istedet for *var*, og pilfunksjoner blir brukt istedetfor *function()*.
 
-**Mer kommer....**
+For å kunne gjøre forespøsler til REST-APIet må det legges til noen linjer i *conf/httpd.conf*-fila for å omgå *Same-Origin policy*. 
+<pre>
+		Header set Access-Control-Allow-Origin "http://localhost"
+		Header set Access-Control-Allow-Headers "Accept, Content-Type"
+		Header set Access-Control-Allow-Credentials "true"
+		Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE"
+</pre>
+Selv om klienten kjører på samme vert(localhost), defineres Origin på både porter og protokoll. Derfor må dette gjøres da localhost:80 og localhost:8000 ikke er på samme Origin.
+
+
+
+I tillegg er det satt opp en serive worker som tillater en bruker å gjøre alle GET-operasjoner offline, både å lese alle dikt på en gang og hvert enkelt dikt.
+
 
 
 ## Instruksjoner
 
 Programmet krever følgende:
 
-*	**mp3**-docker container
+*	**mp3**-docker containere
 
 Mesteparten av repositoriet består av MP2 så framgangen er ganske lik.
-Start som vanlig og så gå til localhost/js-client/
+Kjør **run.sh** som rot.
+<pre>
+	sudo ./run.sh
+</pre>
 
-**Mer kommer....**
+Gå så til *localhost/js-client/* i webleseren din
+
+
+Her kan man teste alle knappene: logge inn, logge ut, hente ett dikt, hente alle dikt, lage dikt, endre dikt, slette dikt og slette alle dikt. I avlogget miljø kan man også hente dikt uten tilgang til nettet dersom man har først hentet alle diktene.
+
 
 ## Log
 
 <pre>
 
+22-04-2021
+	MAGNUS: service workeren cacher nå hvert individuelle dikt
 
 18-04-2021
 	MAGNUS: Har så langt lagt evenlisteners til alle knappene som gir riktig forespørsel til REST APIet og gjør da samme utskrift til status-feltet som CGI-webgrensensittet i MP3. I tillegg blir cookies satt slik at sesjoner blir lagret og at man da forblir logget inn selvom man lukker siden og åpner den igjen.

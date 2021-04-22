@@ -26,16 +26,6 @@ if [[ -z $(find $ROTFS/bin -type l -ls) ]];then
 	done
 fi
 
-######coming soon
-
-#systemctl start docker.service
-
-#sudo docker login
-
-#sudo docker pull hkulterud/dockerhub:g7mp3_image
-
-#sudo docker run -d --cap-drop=setfcap --cpu-shares 512 -m 512m -it -p 8000:80 --name REST_API hkulterud/dockerhub:g7mp3_image
-
 
 
 #compile the webserver.c code
@@ -46,6 +36,14 @@ if gcc $ROTFS/bin/webserver.c --static -o $ROTFS/bin/webserver.o; then
 
 	cd $ROTFS
 
+	#starting docker containers
+	systemctl start docker.service
+	docker login
+	docker pull hkulterud/dockerhub:g7mp3_image
+
+	docker container run -d --cap-drop=setfcap --cpu-shares 512 -m 512m -it -p 8000:80 --name REST_API hkulterud/dockerhub:g7mp3_image
+	docker container run -d --cap-drop=setfcap --cpu-shares 512 -m 512m -it -p 8080:80 --name WEB_INTERFACE hkulterud/dockerhub:g7mp3_image
+
 	#mount /proc as proc in current directory
 	mount -t proc proc $ROTFS/proc
 
@@ -54,4 +52,10 @@ if gcc $ROTFS/bin/webserver.c --static -o $ROTFS/bin/webserver.o; then
 
 	#unmounting the namespace
 	umount $ROTFS/proc
+
+	#stoping docker containers
+	docker container stop WEB_INTERFACE
+	docker container stop REST_API
+	docker container rm WEB_INTERFACE
+	docker container rm REST_API
 fi
