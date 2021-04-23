@@ -24,7 +24,7 @@ if(document.cookie != "")
 //service worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register("sw.js")
-    .then(registration => console.log(registration))
+    .then(registration => alert(registration))
     .catch(error => alert(error)); 
 }
 
@@ -48,13 +48,10 @@ if(current_cookie_id_value != "") {
 
         statusField.innerHTML = `${DEFAULT_DEBUG_TEXT}Loginstatus xml: ${data}`;
 
-        console.log(data);
 
         const xmlData = new DOMParser().parseFromString(data,"text/xml");
         const STATUSCODE = xmlData.getElementsByTagName("status")[0].childNodes[0].nodeValue;
         const USER = xmlData.getElementsByTagName("user")[0].childNodes[0].nodeValue;
-
-        console.log(STATUSCODE, USER);
 
         statusField.innerHTML += `<br/>Loginstatuscode: ${STATUSCODE} - User: ${USER}`;
 
@@ -77,8 +74,7 @@ document.addEventListener("click", event => {
     
         const username = loginForm.elements.inp_user.value;
         //temporarily commented away while hashing is being implemented in rest.sh
-        //let password = loginForm.elements.inp_password.value;
-        const password = "c95eb7a16be87c2cfdb9e049b83a053a53453b18424eee39388eb5ba8d516dc7";
+        let password = loginForm.elements.inp_password.value;
 
         //if missing username or password
         if(username == "" || password == "")
@@ -107,7 +103,6 @@ document.addEventListener("click", event => {
             .then(data => {
                 
 
-                console.log(data);
 
                 //parse the XML-response
                 const xmlData = new DOMParser().parseFromString(data,"text/xml");
@@ -371,7 +366,7 @@ getAll.elements.read_all.addEventListener("click", event => {
 
     })
     .then(response => response.text())
-    .catch(error => console.log(error))
+    .catch(error => alert(error))
     .then(data => {
         statusField.innerHTML = `${DEFAULT_DEBUG_TEXT} ${data}`;
     });
